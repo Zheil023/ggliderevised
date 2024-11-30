@@ -1,15 +1,26 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  TextInput,
+} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/config/firebaseconfig';
 import ItemListCollection from './ItemListCollection'; // Import ItemListCollection component
 
 export default function Category({ category }) {
-  const [categoryList, setCategoryList] = useState([]); 
+  const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('Canned');
-  const [showModal, setShowModal] = useState(false); // State for showing modal
-  const [itemList, setItemList] = useState([]); // Store items for selected category
-  const [selectedItems, setSelectedItems] = useState([]); // Store selected items in modal
+  const [showModal, setShowModal] = useState(false);
+  const [itemList, setItemList] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]); // Filtered items for search
+  const [searchTerm, setSearchTerm] = useState(''); // Search term state
+  const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
     GetCategories();
@@ -26,16 +37,29 @@ export default function Category({ category }) {
 
   const handleCategoryClick = (itemName) => {
     setSelectedCategory(itemName);
-    setShowModal(true); // Open modal when a category is clicked
+    setShowModal(true);
     category(itemName); // Send selected category to parent
-    GetItemList(itemName); // Fetch items for the selected category
+    GetItemList(itemName);
   };
 
   const GetItemList = async (category) => {
     const q = query(collection(db, 'Items'), where('category', '==', category));
     const querySnapshot = await getDocs(q);
     const items = querySnapshot.docs.map((doc) => doc.data());
-    setItemList(items); // Set items for the selected category
+    setItemList(items);
+    setFilteredItems(items); // Initialize filteredItems with all items
+  };
+
+  const handleSearch = (text) => {
+    setSearchTerm(text);
+    if (text.trim() === '') {
+      setFilteredItems(itemList); // Reset to full list when search is cleared
+    } else {
+      const filtered = itemList.filter((item) =>
+        item.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredItems(filtered);
+    }
   };
 
   const handleAddItemToList = (item) => {
@@ -49,11 +73,16 @@ export default function Category({ category }) {
       <View style={styles.categoryContainer}>
         {categoryList.map((item) => (
           <TouchableOpacity
-            key={item.name} // Use item name for keys
+            key={item.name}
             onPress={() => handleCategoryClick(item.name)}
             style={styles.categoryItem}
           >
-            <View style={[styles.container, selectedCategory === item.name && styles.selectedCategoryContainer]}>
+            <View
+              style={[
+                styles.container,
+                selectedCategory === item.name && styles.selectedCategoryContainer,
+              ]}
+            >
               <Image
                 source={{ uri: item?.imageUrl }}
                 style={styles.categoryImage}
@@ -64,23 +93,30 @@ export default function Category({ category }) {
         ))}
       </View>
 
-      {/* Modal for adding items */}
       <Modal
         visible={showModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowModal(false)} // Close modal when back pressed
+        onRequestClose={() => setShowModal(false)}
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>{selectedCategory} Items</Text>
-            
+
+            {/* Search Bar */}
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Search items..."
+              value={searchTerm}
+              onChangeText={handleSearch}
+            />
+
             <ScrollView style={styles.itemListContainer}>
-              {itemList.length === 0 ? (
+              {filteredItems.length === 0 ? (
                 <Text>No items available in this category</Text>
               ) : (
                 <View style={styles.gridContainer}>
-                  {itemList.map((item, index) => (
+                  {filteredItems.map((item, index) => (
                     <ItemListCollection
                       key={index.toString()}
                       product={item}
@@ -91,7 +127,10 @@ export default function Category({ category }) {
               )}
             </ScrollView>
 
-            <TouchableOpacity onPress={() => setShowModal(false)} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={() => setShowModal(false)}
+              style={styles.closeButton}
+            >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -109,7 +148,7 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between', // Distribute items evenly
+    justifyContent: 'space-between',
   },
   categoryImage: {
     marginTop: 20,
@@ -121,7 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   categoryItem: {
-    width: '30%', // Set each item to occupy 30% of the container width
+    width: '30%',
     marginBottom: 15,
   },
   container: {
@@ -141,8 +180,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'lightblue',
     borderColor: 'lightblue',
   },
-  
-  // Modal Styles
   modalBackdrop: {
     flex: 1,
     justifyContent: 'center',
@@ -161,14 +198,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  
-  // Grid Layout for Items
+  searchBar: {
+    backgroundColor: '#f2f2f2',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-evenly', // Even spacing between items
+    justifyContent: 'space-evenly',
   },
-
   closeButton: {
     backgroundColor: '#a62639',
     padding: 10,

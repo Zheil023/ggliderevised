@@ -3,7 +3,7 @@ import { View, Image, StyleSheet, Dimensions, TouchableOpacity, Text, Modal, Scr
 import Svg, { Circle } from 'react-native-svg';
 import { useRoute } from '@react-navigation/native';
 import { collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/config/firebaseconfig';
+import { db } from '..//..//config//firebaseconfig';
 
 const storeLayoutImage = require('../../assets/images/store.png');
 

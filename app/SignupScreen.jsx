@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "..//..//gglideupd-main//config//firebaseconfig"; // Import your Firebase configuration
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "..//..//gglideupd-main//config//firebaseconfig";
 import { useNavigation } from '@react-navigation/native';
 
-export default function Index() {
+export default function Signup() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert('Login successful!');
-      navigation.replace('(tabs)'); // Navigate to your main screen after login
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert('Account created successfully!');
+      navigation.replace('Index'); // Redirect to login screen
     } catch (error) {
       alert(error.message);
     }
@@ -21,7 +21,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign Up</Text>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -36,9 +36,9 @@ export default function Index() {
         onChangeText={(text) => setPassword(text)}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
-      <Text style={styles.link} onPress={() => navigation.navigate('SignupScreen')}>
-        Don't have an account? Sign up
+      <Button title="Sign Up" onPress={handleSignup} />
+      <Text style={styles.link} onPress={() => navigation.navigate('index')}>
+        Already have an account? Log in
       </Text>
     </View>
   );
