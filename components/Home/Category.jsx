@@ -1,25 +1,18 @@
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  TextInput,
-} from 'react-native';
 import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/config/firebaseconfig';
-import ItemListCollection from './ItemListCollection'; // Import ItemListCollection component
+import ItemListCollection from './ItemListCollection';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/config/firebaseconfig';
 
-export default function Category({ category }) {
+export default function Category({ category, navigation }) { // Add navigation prop here
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('Canned');
   const [showModal, setShowModal] = useState(false);
   const [itemList, setItemList] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]); // Filtered items for search
-  const [searchTerm, setSearchTerm] = useState(''); // Search term state
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
@@ -47,13 +40,13 @@ export default function Category({ category }) {
     const querySnapshot = await getDocs(q);
     const items = querySnapshot.docs.map((doc) => doc.data());
     setItemList(items);
-    setFilteredItems(items); // Initialize filteredItems with all items
+    setFilteredItems(items);
   };
 
   const handleSearch = (text) => {
     setSearchTerm(text);
     if (text.trim() === '') {
-      setFilteredItems(itemList); // Reset to full list when search is cleared
+      setFilteredItems(itemList);
     } else {
       const filtered = itemList.filter((item) =>
         item.name.toLowerCase().includes(text.toLowerCase())
@@ -66,6 +59,8 @@ export default function Category({ category }) {
     setSelectedItems((prevItems) => [...prevItems, item]);
   };
 
+  
+  
   return (
     <View style={styles.categoryWrapper}>
       <Text style={styles.categoryText}>Category</Text>
@@ -136,6 +131,8 @@ export default function Category({ category }) {
           </View>
         </View>
       </Modal>
+
+      
     </View>
   );
 }
@@ -220,4 +217,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  
 });
